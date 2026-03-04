@@ -1,0 +1,102 @@
+from fastapi import FastAPI,Response,status
+from fastapi.params import Body
+from pydantic import BaseModel
+from typing import Optional
+from random import randrange
+from fastapi import HTTPException
+
+app = FastAPI()
+ 
+# here "/" refer for root directory and if we give "/user" then for get the acess then after url need to give "/user" then able to see the output\
+# get ---> method
+#"/" path 
+# root ---> fucntion
+
+# It try to match when it get the first match it stop the search and give the output
+@app.get("/")
+def root():
+    return { "message": "hellow World new project"}
+
+
+# here post1 will call not post2 s
+@app.get("/post1")
+def post1():
+    return {"message":"first call"}
+
+@app.get("/post2")
+def post2():
+    return {"message":"here is the data"}
+
+
+
+
+@app.get("/post1")
+def post1():
+    return {"message":"post1 called"}
+
+@app.get("/post2")
+def post2():
+    return {"message":"post2 called"}
+
+# post request 
+# @app.post("/createpost")
+# def create_posts(payload: dict =Body(...)):
+#     print(payload)
+#     return {"title":payload['title'],
+#             "content":payload['content']}
+#title str , content str , bool
+
+class post(BaseModel):
+    title: str
+    content: str
+    publish: bool=True
+    rating : Optional[int]=None
+
+
+
+mypost = [{"title":"title of post 1","content":"content of post 1","id":1},{"title":"favorite foods","content":"I like piza","id":2}]
+
+@app.get("/post")
+def send_post():
+    return {"data":mypost}
+
+@app.post("/post",status_code=status.HTTP_201_CREATED)
+def create_posts(post:post):
+    post_dict = post.model_dump()
+    post_dict['id']=randrange(0,10000000)
+    mypost.append(post_dict)
+    return {"data":post_dict}
+
+
+
+# this is for geting last post 
+
+@app.get("/posts/latest")
+def latest():
+    post =mypost[len(mypost)-1]
+    return {"detail":post}
+
+# # getting the post based on id
+
+
+def find_post(id):
+    for p in mypost:
+         
+        if(p["id"]==id):
+            print("inside")
+            return p
+   
+
+
+# id:int use that id must be a intiger
+@app.get("/posts/{id}")
+def get_post(id:int,response:Response):
+    post = find_post(id)
+    if(not post):
+        # response.status_code=status.HTTP_404_NOT_FOUND
+        # return {'message':f"post with id:{id} not found"}
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with if:{id} was not found")
+    return {"post_detail":post}
+
