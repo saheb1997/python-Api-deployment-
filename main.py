@@ -100,3 +100,21 @@ def get_post(id:int,response:Response):
                             detail=f"post with if:{id} was not found")
     return {"post_detail":post}
 
+
+def find_index_post(id):
+    for i , p in enumerate (mypost):
+        if p['id']==int(id):
+            print("inside")
+            return i
+
+# delete post
+@app.delete("/post/{id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id:int):
+    index=find_index_post(id)
+    print(index)
+    if(not index):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id:{id} was not found")
+
+    mypost.pop(index)
+    return {'message':'post was deleted'}
