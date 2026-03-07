@@ -46,6 +46,7 @@ def post2():
 #             "content":payload['content']}
 #title str , content str , bool
 
+
 class post(BaseModel):
     title: str
     content: str
@@ -104,7 +105,7 @@ def get_post(id:int,response:Response):
 def find_index_post(id):
     for i , p in enumerate (mypost):
         if p['id']==int(id):
-            print("inside")
+            # print("inside")
             return i
 
 # delete post
@@ -118,3 +119,18 @@ def delete_post(id:int):
 
     mypost.pop(index)
     return {'message':'post was deleted'}
+
+
+@app.put("/post/{id}")
+def update_post(id:int,Post:post):
+    print(post)
+    index=find_index_post(id)
+    # print(index)
+    # print(index)
+    if index==None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id:{id} was not found")
+    post_dict = Post.model_dump()
+    post_dict['id']= id
+    mypost[index]=post_dict
+    return {'data':post_dict}
