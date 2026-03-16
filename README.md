@@ -21,3 +21,7 @@ if(not post):
 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
 detail=f"post with if:{id} was not found")
 return {"post_detail":post}
+
+<!-- Database -->
+
+If want to create unique Id evertime then use datatype :- "serial"f
