@@ -24,7 +24,7 @@ app = FastAPI()
 
 
 # @app.get("/post")
-# def post1():
+# def post1(): 
 #     return {"message":"post1 called"}
 
 # @app.get("/post2")
@@ -73,12 +73,12 @@ mypost = [{"title":"title of post 1","content":"content of post 1","id":1},{"tit
 # # getting the post based on id
 
 
-# def find_post(id):
-#     for p in mypost:
+def find_post(id):
+    for p in mypost:
          
-#         if(p["id"]==id):
-#             print("inside")
-#             return p
+        if(p["id"]==id):
+            print("inside")
+            return p
    
 
 
@@ -95,11 +95,11 @@ mypost = [{"title":"title of post 1","content":"content of post 1","id":1},{"tit
 #     return {"post_detail":post}
 
 
-# def find_index_post(id):
-#     for i , p in enumerate (mypost):
-#         if p['id']==int(id):
-#             # print("inside")
-#             return i
+def find_index_post(id):
+    for i , p in enumerate (mypost):
+        if p['id']==int(id):
+            # print("inside")
+            return i
 
 # # delete post
 # @app.delete("/post/{id}",status_code=status.HTTP_204_NO_CONTENT)
@@ -144,7 +144,7 @@ while True:
         print("error:",error)
         time.sleep(2)
 
-@app.get("/post")
+@app.get("/posts")
 def get_posts():
     cursor.execute(
         """
@@ -155,7 +155,9 @@ def get_posts():
     print(posts)
     return { "data": posts}
 
-@app.post("/post")
+
+
+@app.post("/posts")
 def create_posts(post:post):
     cursor.execute("""
     INSERT INTO post (title,content,publish) 
@@ -167,3 +169,69 @@ def create_posts(post:post):
     return {"data":newpost}
 
 print("\nf")
+
+
+
+
+# id:int use that id must be a intiger
+@app.get("/posts/{id}")
+def get_post(id:int,response:Response):
+    cursor.execute(
+        """
+        SELECT * FROM post WHERE id = %s
+
+        """,(str(id),)
+    )
+    post =cursor.fetchone()
+    
+    print(post)
+
+    if(not post):
+        # response.status_code=status.HTTP_404_NOT_FOUND
+        # return {'message':f"post with id:{id} not found"}
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with if:{id} was not found")
+    return {"post_detail":post}
+
+
+# delete post
+@app.delete("/post/{id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id:int):
+    index=find_index_post(id)
+    cursor.execute(
+        """
+            DELETE FROM post WHERE id = %s 
+            returning *
+         
+        """,
+        (str(id),)
+    )
+    delete_post = cursor.fetchone()
+    conn.commit()
+    if delete_post==None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id:{id} was not found")
+
+   
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+
+@app.put("/post/{id}")
+def update_post(id:int,post:post):
+    cursor.execute(
+        """
+            UPDATE post SET title= %s , content = %s ,publish = %s WHERE id = %s
+            RETURNING *
+        """,
+        (post.title , post.content , post.publish,str(id),)
+    )
+    updated_post = cursor.fetchone()
+    conn.commit()
+
+    if updated_post==None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id:{id} was not found")
+    
+    return {'data':updated_post}
